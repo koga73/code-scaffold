@@ -3,7 +3,7 @@
 		"__NEW_NAME__": "MyApp"
 	},
 	"ignore": [
-		"app-scaffold",
+		"code-scaffold",
 		{
 			"description": "Ignored directories",
 			"type": "regex",

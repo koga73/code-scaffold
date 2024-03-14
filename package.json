@@ -1,10 +1,10 @@
 {
-	"name": "app-scaffold",
+	"name": "code-scaffold",
 	"version": "1.0.0",
 	"description": "Templatize code bases and scaffold them into new projects",
 	"type": "module",
 	"bin": {
-		"app-scaffold": "bin/cli.js"
+		"code-scaffold": "bin/cli.js"
 	},
 	"main": "index.js",
 	"scripts": {
@@ -12,6 +12,7 @@
 		"cli": "node ./bin/cli.js"
 	},
 	"keywords": [
+		"code",
 		"scaffold",
 		"template",
 		"app"
