@@ -1,4 +1,4 @@
-# app-scaffold
+# code-scaffold
 
 Templatize code bases and scaffold them into new projects
 
@@ -7,7 +7,7 @@ Templatize code bases and scaffold them into new projects
 Setup a configuration file in your input directory then run the following command:
 
 ```bash
-npx app-scaffold --input ../SampleApp --output ./template
+npx code-scaffold --input ../SampleApp --output ./template --name MyApp
 ```
 
 ### Local usage
