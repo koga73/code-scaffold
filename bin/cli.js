@@ -4,7 +4,7 @@
 import {promises as fs} from "fs";
 import path from "path";
 
-import AppScaffold, {DEFAULT_REPLACE_OPTIONS} from "../index.js";
+import CodeScaffold, {DEFAULT_REPLACE_OPTIONS} from "../index.js";
 
 import packageJson from "../package.json" assert {type: "json"};
 const {name: packageName, version: packageVersion} = packageJson;
@@ -43,7 +43,7 @@ const DEFAULT_CONFIG_FILE_NAME = `.${packageName}.config.json`;
 			console.log(`USING CONFIG: '${configPath}'`);
 		}
 		const {tokens, ignore, replace} = await parseConfig(configPath, remainingArgs);
-		await AppScaffold({input, output, rulesIgnore: ignore, rulesReplace: replace, tokens});
+		await CodeScaffold({input, output, rulesIgnore: ignore, rulesReplace: replace, tokens});
 	} catch (err) {
 		console.error(err);
 		process.exit(1);

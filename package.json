@@ -23,5 +23,13 @@
 	"license": "MIT",
 	"devDependencies": {
 		"rimraf": "^5.0.5"
-	}
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/koga73/code-scaffold.git"
+	},
+	"bugs": {
+		"url": "https://github.com/koga73/code-scaffold/issues"
+	},
+	"homepage": "https://github.com/koga73/code-scaffold#readme"
 }
