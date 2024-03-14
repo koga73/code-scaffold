@@ -1,0 +1,85 @@
+{
+	"tokens": {
+		"__NEW_NAME__": "MyApp"
+	},
+	"ignore": [
+		"app-scaffold",
+		{
+			"description": "Ignored directories",
+			"type": "regex",
+			"value": {
+				"expression": "(\\.git|\\.vs|bin|obj|node_modules)$",
+				"flags": "i"
+			}
+		},
+		{
+			"description": "Ignored extensions",
+			"type": "regex",
+			"value": {
+				"expression": "\\.(obj|dll|exe|pfx)$",
+				"flags": "i"
+			}
+		},
+		"package-lock.json",
+		"src/router/routes.js"
+	],
+	"replace": [
+		{
+			"description": "Replace 'sample'",
+			"find": {
+				"type": "regex",
+				"value": {
+					"expression": "\\b(sample)\\b",
+					"flags": "gim"
+				}
+			},
+			"replace": "__NEW_NAME__",
+			"options": {
+				"fileName": true,
+				"filePath": false,
+				"fileContents": true,
+				"maintainCase": true
+			}
+		},
+		{
+			"description": "Reset package.json version",
+			"find": {
+				"type": "regex",
+				"value": {
+					"expression": "[\"]version[\"]:\\s+[\"].+?[\"]",
+					"flags": "g"
+				}
+			},
+			"replace": "\"version\": \"1.0.0\"",
+			"options": {
+				"fileName": false,
+				"filePath": false,
+				"fileContents": true,
+				"maintainCase": false
+			},
+			"files": ["package.json"]
+		},
+		{
+			"description": "Reset changelog",
+			"find": {
+				"type": "regex",
+				"value": {
+					"expression": "^[\\s\\S]*$",
+					"flags": "g"
+				}
+			},
+			"replace": "# Changelog\n\n## 1.0.0\n\n- Initial release",
+			"options": {
+				"fileName": false,
+				"filePath": false,
+				"fileContents": true,
+				"maintainCase": false
+			},
+			"files": ["CHANGELOG.md"]
+		},
+		{
+			"find": "src/router/template-routes.js",
+			"replace": "src/router/routes.js"
+		}
+	]
+}
