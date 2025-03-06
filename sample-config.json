@@ -38,7 +38,11 @@
 				"fileName": true,
 				"filePath": false,
 				"fileContents": true,
-				"maintainCase": true
+				"maintainCase": true,
+				"caseTransforms": {
+					"ifUpper": null,
+					"ifLower": "hyphenate"
+				}
 			}
 		},
 		{
