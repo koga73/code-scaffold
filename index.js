@@ -8,7 +8,12 @@ export const DEFAULT_REPLACE_OPTIONS = {
 	fileName: true,
 	filePath: true,
 	fileContents: false,
-	maintainCase: false
+	maintainCase: false,
+	caseTransforms: null
+};
+
+export const CASE_CONDITIONS = {
+	HYPHENATE: "hyphenate"
 };
 
 async function main({input, output, rulesIgnore, rulesReplace, tokens}) {
@@ -134,7 +139,8 @@ async function doReplace(fileName, inputPath, outputPath, rules, tokens) {
 			fileName: optionFileName = DEFAULT_REPLACE_OPTIONS.fileName,
 			filePath: optionFilePath = DEFAULT_REPLACE_OPTIONS.filePath,
 			fileContents: optionFileContents = DEFAULT_REPLACE_OPTIONS.fileContents,
-			maintainCase: optionFileCase = DEFAULT_REPLACE_OPTIONS.maintainCase
+			maintainCase: optionMaintainCase = DEFAULT_REPLACE_OPTIONS.maintainCase,
+			caseTransforms: optionCaseTransforms = DEFAULT_REPLACE_OPTIONS.caseTransforms
 		} = options;
 
 		//Setup booleans for what we need to replace
@@ -169,7 +175,7 @@ async function doReplace(fileName, inputPath, outputPath, rules, tokens) {
 
 		//Replace the values
 		if (needsReplaceFileName) {
-			output.fileName = replaceAll(fileName, findValue, replace, tokens, optionFileCase);
+			output.fileName = replaceAll(fileName, findValue, replace, tokens, optionMaintainCase, optionCaseTransforms);
 		}
 		if (needsReplaceFilePath) {
 			output.filePath = replaceAll(
@@ -177,11 +183,12 @@ async function doReplace(fileName, inputPath, outputPath, rules, tokens) {
 				findValue instanceof RegExp ? findValue : findValue.replace(/[\/\\]/g, path.sep).replace(/[\\]/g, "\\\\"),
 				replace.replace(/[\/\\]/g, path.sep),
 				tokens,
-				optionFileCase
+				optionMaintainCase,
+				optionCaseTransforms
 			);
 		}
 		if (needsReplaceFileContents) {
-			output.fileContents = replaceAll(output.fileContents ?? fileContents, findValue, replace, tokens, optionFileCase);
+			output.fileContents = replaceAll(output.fileContents ?? fileContents, findValue, replace, tokens, optionMaintainCase, optionCaseTransforms);
 		}
 	}
 	if (output.fileName || output.filePath || output.fileContents) {
@@ -190,7 +197,7 @@ async function doReplace(fileName, inputPath, outputPath, rules, tokens) {
 	return false;
 }
 
-function replaceAll(input, find, replace, tokens, maintainCase = DEFAULT_REPLACE_OPTIONS.maintainCase) {
+function replaceAll(input, find, replace, tokens, maintainCase = DEFAULT_REPLACE_OPTIONS.maintainCase, caseTransforms = DEFAULT_REPLACE_OPTIONS.caseTransforms) {
 	//Reset the regex
 	if (find instanceof RegExp) {
 		find.lastIndex = 0;
@@ -201,7 +208,7 @@ function replaceAll(input, find, replace, tokens, maintainCase = DEFAULT_REPLACE
 		const matchStr = match[0];
 		const matchIndex = match.index;
 		const replacement = replace in tokens ? tokens[replace] : replace;
-		const replacementCased = maintainCase ? matchCase(matchStr, replacement) : replacement;
+		const replacementCased = maintainCase ? matchCase(matchStr, replacement, caseTransforms) : replacement;
 		output += input.substring(lastPosition, matchIndex) + replacementCased;
 		lastPosition = matchIndex + matchStr.length;
 	}
@@ -209,13 +216,19 @@ function replaceAll(input, find, replace, tokens, maintainCase = DEFAULT_REPLACE
 	return output;
 }
 
-function matchCase(original, replacement) {
+function matchCase(original, replacement, {ifUpper = null, ifLower = null} = {}) {
 	//All uppercase
 	if (original === original.toUpperCase()) {
+		if (ifUpper === CASE_CONDITIONS.HYPHENATE) {
+			return hyphenate(replacement).toUpperCase();
+		}
 		return replacement.toUpperCase();
 	}
 	//All lowercase
 	if (original === original.toLowerCase()) {
+		if (ifLower === CASE_CONDITIONS.HYPHENATE) {
+			return hyphenate(replacement).toLowerCase();
+		}
 		return replacement.toLowerCase();
 	}
 	//First letter uppercase
@@ -223,4 +236,13 @@ function matchCase(original, replacement) {
 		return replacement.charAt(0).toUpperCase() + replacement.slice(1);
 	}
 	return replacement;
+}
+
+//Transforms spaces to hyphens and camelCase to hyphenated
+//"test me 123" -> "test-me-123"
+//"testMe 123" -> "Test-Me-123"
+function hyphenate(input) {
+	let output = input.replace(/\s+/g, "-");
+	output = output.replace(/([a-z])([A-Z])/g, "$1-$2");
+	return output;
 }
