@@ -21,6 +21,13 @@
 		"name": "AJ Savino"
 	},
 	"license": "MIT",
+	"dependencies": {
+		"@babel/generator": "^7.22.0",
+		"@babel/parser": "^7.22.0",
+		"@babel/traverse": "^7.22.0",
+		"@babel/types": "^7.22.0",
+		"fs-extra": "^11.0.0"
+	},
 	"devDependencies": {
 		"rimraf": "^5.0.5"
 	},
