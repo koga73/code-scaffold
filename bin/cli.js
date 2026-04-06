@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-//Imports
-import {promises as fs} from "fs";
-import path from "path";
+import {promises as fs} from "node:fs";
+import path from "node:path";
+import {fileURLToPath} from "node:url";
 
 import CodeScaffold, {DEFAULT_REPLACE_OPTIONS} from "../index.js";
 
@@ -16,18 +16,27 @@ const DEFAULT_CONFIG = {
 };
 const DEFAULT_CONFIG_FILE_NAME = `.${packageName}.config.json`;
 
+// Short flag aliases: maps single-char flag to its long-form key
+const SHORT_FLAG_ALIASES = {
+	l: "language"
+};
+
 (async function main(args) {
-	//Welcome message
 	console.log(`${packageName} v${packageVersion}`);
 	console.log();
 
-	//Parse args into key/value pairs
 	if (!args.length) {
 		showCommands();
 		process.exit(0);
 	}
 	const parsedArgs = parseArgs(args);
-	const {input, output, config, ...remainingArgs} = parsedArgs;
+	const {input, output, config, language, lang, ...remainingArgs} = parsedArgs;
+
+	// Normalize --language / --lang / -l to a canonical value
+	const rawLang = language ?? lang;
+	const isTypeScript = ["typescript", "ts", "tsx"].includes(String(rawLang).toLowerCase());
+	const canonicalLanguage = isTypeScript ? "typescript" : "javascript";
+
 	const configPath = path.resolve(config ?? path.join(input, DEFAULT_CONFIG_FILE_NAME));
 
 	try {
@@ -42,13 +51,54 @@ const DEFAULT_CONFIG_FILE_NAME = `.${packageName}.config.json`;
 		} else {
 			console.log(`USING CONFIG: '${configPath}'`);
 		}
+
+		console.log(`LANGUAGE: ${canonicalLanguage}`);
+		console.log();
+
 		const {tokens, ignore, replace} = await parseConfig(configPath, remainingArgs);
+		const outputDir = path.resolve(output);
+
 		await CodeScaffold({input, output, rulesIgnore: ignore, rulesReplace: replace, tokens});
+
+		// Post-processing: inject patch script into output
+		await injectPatchScript(outputDir);
+
+		// Post-processing: TypeScript conversion
+		if (isTypeScript) {
+			const {generateTsVersion} = await import("../lib/generate-ts-version.js");
+			await generateTsVersion(outputDir, tokens.name);
+		}
+
+		console.log();
+		console.log("COMPLETE!");
 	} catch (err) {
 		console.error(err);
 		process.exit(1);
 	}
 })(process.argv.splice(2));
+
+// Copies the bundled patch script into <outputDir>/scripts/ and ensures the
+// output package.json has a postinstall hook pointing to it.
+async function injectPatchScript(outputDir) {
+	const __dirname = path.dirname(fileURLToPath(import.meta.url));
+	const assetSrc = path.resolve(__dirname, "../assets/patch-react-hooks-eslint.cjs");
+	const scriptsDir = path.join(outputDir, "scripts");
+	const assetDest = path.join(scriptsDir, "patch-react-hooks-eslint.cjs");
+
+	await fs.mkdir(scriptsDir, {recursive: true});
+	await fs.copyFile(assetSrc, assetDest);
+
+	// Add postinstall to the output's package.json (if present)
+	const pkgPath = path.join(outputDir, "package.json");
+	if (await fsExists(pkgPath)) {
+		const pkgJson = JSON.parse(await fs.readFile(pkgPath, "utf8"));
+		if (!pkgJson.scripts) {
+			pkgJson.scripts = {};
+		}
+		pkgJson.scripts.postinstall = "node scripts/patch-react-hooks-eslint.cjs";
+		await fs.writeFile(pkgPath, JSON.stringify(pkgJson, null, 2));
+	}
+}
 
 function parseArgs(args) {
 	const parsed = {};
@@ -59,6 +109,12 @@ function parseArgs(args) {
 			const key = arg.substring(2).toLowerCase().replace(/[^\w]/g, "");
 			const value = i + 1 < argsLen ? (!args[i + 1].startsWith("--") ? args[i + 1] : true) : true;
 			parsed[key] = value;
+		} else if (/^-[a-z]$/i.test(arg)) {
+			// Short flag: -l ts
+			const shortKey = arg.substring(1).toLowerCase();
+			const longKey = SHORT_FLAG_ALIASES[shortKey] ?? shortKey;
+			const value = i + 1 < argsLen ? (!args[i + 1].startsWith("-") ? args[i + 1] : true) : true;
+			parsed[longKey] = value;
 		}
 	}
 	return parsed;
@@ -69,7 +125,6 @@ function parseConfig(configFile, remainingArgs) {
 		.readFile(configFile, "utf-8")
 		.then((configJson) => JSON.parse(configJson))
 		.then((config) => {
-			//Merge tokens with remaining args
 			const tokens = Object.assign({}, config.tokens ? config.tokens : DEFAULT_CONFIG.tokens, remainingArgs);
 			return {
 				tokens,
@@ -148,9 +203,9 @@ function parseRuleReplace({description, find, replace, options = DEFAULT_REPLACE
 	};
 }
 
-function fsExists(path) {
+function fsExists(filePath) {
 	return fs
-		.stat(path)
+		.stat(filePath)
 		.then(() => true)
 		.catch(() => false);
 }
@@ -163,6 +218,12 @@ function showCommands() {
 	console.log(`USAGE:`);
 	console.log(`  ${packageName} --input <inputDir> --output <outputDir>`);
 	console.log(`  ${packageName} --input <inputDir> --output <outputDir> --config <configFile>`);
+	console.log(`  ${packageName} --input <inputDir> --output <outputDir> --language <js|ts>`);
+	console.log();
+	console.log(`LANGUAGE FLAG:`);
+	console.log(`  --language, --lang, -l    Accepted values:`);
+	console.log(`    javascript, js, jsx     → JavaScript output (default)`);
+	console.log(`    typescript, ts, tsx     → TypeScript output`);
 	console.log();
 	console.log(`REMARKS:`);
 	console.log(`  if a config is not specified, it will look for a file named '${DEFAULT_CONFIG_FILE_NAME}' in the input directory.`);
