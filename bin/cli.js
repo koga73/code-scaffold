@@ -6,7 +6,7 @@ import path from "path";
 
 import CodeScaffold, {DEFAULT_REPLACE_OPTIONS} from "../index.js";
 
-import packageJson from "../package.json" assert {type: "json"};
+import packageJson from "../package.json" with {type: "json"};
 const {name: packageName, version: packageVersion} = packageJson;
 
 const DEFAULT_CONFIG = {
