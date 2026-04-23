@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 
 //Imports
-import {promises as fs} from "fs";
-import path from "path";
+import path from "node:path";
+import {promises as fs} from "node:fs";
+import {createRequire} from "node:module";
 
 import CodeScaffold, {DEFAULT_REPLACE_OPTIONS} from "../index.js";
 
-import packageJson from "../package.json" assert {type: "json"};
+//package.json
+const require = createRequire(import.meta.url);
+const packageJson = require("../package.json");
 const {name: packageName, version: packageVersion} = packageJson;
 
 const DEFAULT_CONFIG = {
