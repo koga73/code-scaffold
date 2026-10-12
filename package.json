@@ -1,6 +1,6 @@
 {
 	"name": "code-scaffold",
-	"version": "1.1.1",
+	"version": "1.2.0",
 	"description": "Templatize code bases and scaffold them into new projects",
 	"type": "module",
 	"bin": {
@@ -8,8 +8,10 @@
 	},
 	"main": "index.js",
 	"scripts": {
-		"clean": "rimraf ./template",
-		"cli": "node ./bin/cli.js"
+		"clean": "rimraf ./test/output",
+		"cli": "node ./bin/cli.js",
+		"test:js": "npm run clean && node ./bin/cli.js --input ./test/input --output ./test/output --name TestMe",
+		"test:ts": "npm run clean && node ./bin/cli.js --input ./test/input --output ./test/output --name TestMe --language typescript"
 	},
 	"keywords": [
 		"code",
