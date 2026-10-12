@@ -84,19 +84,21 @@ function parseConfig(configFile, remainingArgs) {
 
 function parseRuleIgnore(rule) {
 	if (isObject(rule)) {
-		const {description, type, value} = rule;
+		const {description, type, value, condition} = rule;
 		switch (type) {
 			case "regex":
 				return {
 					description,
 					type,
-					value: new RegExp(value.expression, value.flags ?? "")
+					value: new RegExp(value.expression, value.flags ?? ""),
+					condition: parseCondition(condition)
 				};
 			case "string":
 				return {
 					description,
 					type,
-					value
+					value,
+					condition: parseCondition(condition)
 				};
 			default:
 				throw new Error(`Invalid rule type: '${type}'`);
@@ -109,7 +111,8 @@ function parseRuleIgnore(rule) {
 	};
 }
 
-function parseRuleReplace({description, find, replace, options = DEFAULT_REPLACE_OPTIONS, ...remaining}) {
+function parseRuleReplace({description, find, replace, options = DEFAULT_REPLACE_OPTIONS, condition, ...remaining}) {
+	remaining.condition = parseCondition(condition);
 	if (isObject(find)) {
 		const {type, value} = find;
 		switch (type) {
@@ -148,6 +151,21 @@ function parseRuleReplace({description, find, replace, options = DEFAULT_REPLACE
 		replace,
 		options,
 		...remaining
+	};
+}
+
+//Condition format: {"token": "<tokenName>", "expression": "<regex>", "flags": "<flags>"}
+function parseCondition(condition) {
+	if (condition === undefined || condition === null) {
+		return null;
+	}
+	if (!isObject(condition) || typeof condition.token !== "string" || typeof condition.expression !== "string") {
+		throw new Error(`Invalid rule condition: '${JSON.stringify(condition)}'. Expected {"token": string, "expression": string, "flags"?: string}`);
+	}
+	const {token, expression, flags} = condition;
+	return {
+		token,
+		value: new RegExp(expression, flags ?? "")
 	};
 }
 

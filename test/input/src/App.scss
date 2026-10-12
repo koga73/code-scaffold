@@ -1,0 +1,14 @@
+@use "reset-css";
+
+html,
+body {
+	height: 100%;
+}
+
+#app {
+	min-height: 100vh;
+}
+.page {
+	box-sizing: border-box;
+	padding: 48px;
+}
