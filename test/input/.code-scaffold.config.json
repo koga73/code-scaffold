@@ -1,0 +1,156 @@
+{
+	"tokens": {
+		"language": "js"
+	},
+	"ignore": [
+		"code-scaffold",
+		"package-lock.json",
+		"src-ts/tsconfig.json",
+		"router/routes.",
+		{
+			"description": "Ignored directories",
+			"type": "regex",
+			"value": {
+				"expression": "[\\\\/](\\.git|\\.vs|bin|obj|node_modules|build|dist)$",
+				"flags": "i"
+			}
+		},
+		{
+			"description": "Ignored extensions",
+			"type": "regex",
+			"value": {
+				"expression": "\\.(obj|dll|exe|pfx)$",
+				"flags": "i"
+			}
+		},
+		{
+			"description": "Ignore pages except templates",
+			"type": "regex",
+			"value": {
+				"expression": "src(-ts)?[\\\\/]pages[\\\\/](?!PageHome$|PageHome[\\\\/]Template[^\\\\/]*$)",
+				"flags": "i"
+			}
+		},
+		{
+			"description": "Ignored if JS",
+			"type": "regex",
+			"condition": {
+				"token": "language",
+				"expression": "^(js|javascript)$",
+				"flags": "i"
+			},
+			"value": {
+				"expression": "([\\\\/]src-ts|\\.tsx?)$",
+				"flags": "i"
+			}
+		},
+		{
+			"description": "Ignored if TS",
+			"type": "regex",
+			"condition": {
+				"token": "language",
+				"expression": "^(ts|typescript)$",
+				"flags": "i"
+			},
+			"value": {
+				"expression": "[\\\\/]src$",
+				"flags": "i"
+			}
+		}
+	],
+	"replace": [
+		{
+			"description": "Replace 'sample' with the name token",
+			"find": {
+				"type": "regex",
+				"value": {
+					"expression": "\\bsample\\b",
+					"flags": "gi"
+				}
+			},
+			"replace": "name",
+			"options": {
+				"filePath": false,
+				"fileContents": true,
+				"maintainCase": true,
+				"caseTransforms": {
+					"ifLower": "hyphenate"
+				}
+			}
+		},
+		{
+			"description": "Reset package.json version",
+			"find": {
+				"type": "regex",
+				"value": {
+					"expression": "\"version\":\\s*\".*?\"",
+					"flags": "g"
+				}
+			},
+			"replace": "\"version\": \"1.0.0\"",
+			"options": {
+				"fileContents": true
+			},
+			"files": ["package.json"]
+		},
+		{
+			"description": "Reset changelog",
+			"find": {
+				"type": "regex",
+				"value": {
+					"expression": "^[\\s\\S]*$",
+					"flags": "g"
+				}
+			},
+			"replace": "# Changelog\n\n## 1.0.0\n\n- Initial release",
+			"options": {
+				"fileName": false,
+				"filePath": false,
+				"fileContents": true
+			},
+			"files": ["CHANGELOG.md"]
+		},
+		{
+			"description": "Rename template-routes to routes",
+			"find": "src/router/template-routes",
+			"replace": "src/router/routes"
+		},
+		{
+			"description": "Rename TemplateHome to PageHome",
+			"find": "TemplateHome",
+			"replace": "PageHome",
+			"options": {
+				"fileContents": true
+			}
+		},
+		{
+			"description": "Rename src-ts to src if TS",
+			"condition": {
+				"token": "language",
+				"expression": "^(ts|typescript)$",
+				"flags": "i"
+			},
+			"find": "src-ts",
+			"replace": "src",
+			"options": {
+				"fileName": false
+			}
+		},
+		{
+			"description": "Point index.html at index.tsx if TS",
+			"condition": {
+				"token": "language",
+				"expression": "^(ts|typescript)$",
+				"flags": "i"
+			},
+			"find": "/src/index.jsx",
+			"replace": "/src/index.tsx",
+			"options": {
+				"fileName": false,
+				"filePath": false,
+				"fileContents": true
+			},
+			"files": ["index.html"]
+		}
+	]
+}
